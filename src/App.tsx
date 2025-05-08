@@ -11,6 +11,7 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Unauthorized from "./pages/Auth/Unauthorized";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import ManageUsers from "./pages/Users/ManageUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/users" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <ManageUsers />
                 </ProtectedRoute>
               } 
             />
