@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/contexts/AuthContext";
 import { getUsers } from "@/services/api";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,24 @@ import {
 } from "@/components/ui/table";
 import { Search, Edit, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import AddUserDialog from "./AddUserDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ManageUsers = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  
+  const queryClient = useQueryClient();
   
   const { data: usersResponse, isLoading, error } = useQuery({
     queryKey: ["users"],
@@ -35,16 +50,62 @@ const ManageUsers = () => {
       user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Mock mutation for adding a user
+  const addUserMutation = useMutation({
+    mutationFn: (newUser: Omit<User, "id">) => {
+      // In a real app, this would be an API call to your backend
+      const mockNewUser = {
+        ...newUser,
+        id: (users.length + 1).toString()
+      };
+      
+      // Here we're just returning the mockNewUser as if it was from an API
+      return Promise.resolve({ data: mockNewUser, success: true });
+    },
+    onSuccess: (response) => {
+      // Update the cache with new user
+      queryClient.setQueryData(["users"], (oldData: any) => ({
+        ...oldData,
+        data: [...(oldData?.data || []), response.data]
+      }));
+      toast.success(`User ${response.data.name} added successfully`);
+    }
+  });
+
+  // Mock mutation for deleting a user
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => {
+      // In a real app, this would be an API call to your backend
+      return Promise.resolve({ success: true });
+    },
+    onSuccess: (_, userId) => {
+      // Update the cache by removing deleted user
+      queryClient.setQueryData(["users"], (oldData: any) => ({
+        ...oldData,
+        data: (oldData?.data || []).filter((user: User) => user.id !== userId)
+      }));
+      const deletedUser = users.find(u => u.id === userId);
+      toast.success(`User ${deletedUser?.name || ''} deleted successfully`);
+    }
+  });
+
+  const handleAddUser = (newUser: Omit<User, "id">) => {
+    addUserMutation.mutate(newUser);
+  };
+
   const handleEditUser = (user: User) => {
     toast.info(`Edit user functionality for ${user.name} will be implemented soon`);
   };
 
   const handleDeleteUser = (user: User) => {
-    toast.info(`Delete user functionality for ${user.name} will be implemented soon`);
+    setUserToDelete(user);
   };
 
-  const handleAddUser = () => {
-    toast.info("Add user functionality will be implemented soon");
+  const confirmDeleteUser = () => {
+    if (userToDelete) {
+      deleteUserMutation.mutate(userToDelete.id);
+      setUserToDelete(null);
+    }
   };
 
   if (isLoading) {
@@ -67,7 +128,7 @@ const ManageUsers = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Manage Users</h1>
-        <Button onClick={handleAddUser} className="flex items-center gap-2">
+        <Button onClick={() => setAddUserDialogOpen(true)} className="flex items-center gap-2">
           <UserPlus className="h-4 w-4" />
           <span>Add User</span>
         </Button>
@@ -141,6 +202,32 @@ const ManageUsers = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add User Dialog */}
+      <AddUserDialog 
+        open={addUserDialogOpen} 
+        onOpenChange={setAddUserDialogOpen} 
+        onAddUser={handleAddUser}
+      />
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user
+              "{userToDelete?.name}" and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteUser} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
