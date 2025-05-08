@@ -12,6 +12,7 @@ import Register from "./pages/Auth/Register";
 import Unauthorized from "./pages/Auth/Unauthorized";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import ManageUsers from "./pages/Users/ManageUsers";
+import NotificationsPage from "./pages/Notifications/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <ManageUsers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute allowedRoles={["mentor", "student"]}>
+                  <NotificationsPage />
                 </ProtectedRoute>
               } 
             />
