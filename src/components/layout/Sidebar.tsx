@@ -9,7 +9,8 @@ import {
   Clock,
   FileText,
   Bell,
-  X
+  X,
+  FilePen
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,12 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
       path: "/logs", 
       icon: <FileText className="h-5 w-5" />,
       roles: ["admin", "mentor", "student"]
+    },
+    { 
+      name: "Session Notes", 
+      path: "/session-notes", 
+      icon: <FilePen className="h-5 w-5" />,
+      roles: ["mentor"]
     },
     { 
       name: "Notifications", 

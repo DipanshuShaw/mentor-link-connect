@@ -14,6 +14,9 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import ManageUsers from "./pages/Users/ManageUsers";
 import NotificationsPage from "./pages/Notifications/NotificationsPage";
 import MeetingsPage from "./pages/Meetings/MeetingsPage";
+import MenteesPage from "./pages/Mentees/MenteesPage";
+import MeetingLogsPage from "./pages/Logs/MeetingLogsPage";
+import SessionNotesPage from "./pages/SessionNotes/SessionNotesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +60,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/mentees" 
+              element={
+                <ProtectedRoute allowedRoles={["mentor"]}>
+                  <MenteesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/notifications" 
               element={
                 <ProtectedRoute allowedRoles={["mentor", "student"]}>
@@ -69,6 +80,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["mentor", "student"]}>
                   <MeetingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/logs" 
+              element={
+                <ProtectedRoute allowedRoles={["admin", "mentor", "student"]}>
+                  <MeetingLogsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/session-notes" 
+              element={
+                <ProtectedRoute allowedRoles={["mentor"]}>
+                  <SessionNotesPage />
                 </ProtectedRoute>
               } 
             />

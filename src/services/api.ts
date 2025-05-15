@@ -102,6 +102,16 @@ export const getMeetings = async (): Promise<ApiResponse<Meeting[]>> => {
   };
 };
 
+export const getMeetingById = async (id: string): Promise<ApiResponse<Meeting | null>> => {
+  await delay(300);
+  const meeting = meetings.find(m => m.id === id);
+  return {
+    data: meeting || null,
+    success: !!meeting,
+    message: meeting ? undefined : "Meeting not found"
+  };
+};
+
 export const getMeetingsForMentor = async (mentorId: string): Promise<ApiResponse<Meeting[]>> => {
   await delay(300);
   const mentorMeetings = meetings.filter(m => m.mentorId === mentorId);
