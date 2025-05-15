@@ -43,21 +43,12 @@ const MeetingsPage = () => {
 
         <Card>
           <CardHeader className="px-6">
-            {user?.role === "mentor" && (
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {user?.role === "mentor" ? (
+              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2">
                   <TabsTrigger value="view">View Meetings</TabsTrigger>
                   <TabsTrigger value="create">Schedule Meeting</TabsTrigger>
                 </TabsList>
-              </Tabs>
-            )}
-            {user?.role !== "mentor" && (
-              <CardTitle>Your Meetings</CardTitle>
-            )}
-          </CardHeader>
-          <CardContent className="px-6">
-            {user?.role === "mentor" ? (
-              <>
                 <TabsContent value="view" className="pt-4">
                   <MeetingsList 
                     meetings={meetings?.data || []} 
@@ -70,8 +61,13 @@ const MeetingsPage = () => {
                     setActiveTab("view");
                   }} />
                 </TabsContent>
-              </>
+              </Tabs>
             ) : (
+              <CardTitle>Your Meetings</CardTitle>
+            )}
+          </CardHeader>
+          <CardContent className="px-6">
+            {user?.role !== "mentor" && (
               <MeetingsList 
                 meetings={meetings?.data || []} 
                 isLoading={isLoading} 

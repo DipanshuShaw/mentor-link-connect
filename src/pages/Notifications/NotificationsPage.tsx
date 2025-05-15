@@ -40,21 +40,12 @@ const NotificationsPage = () => {
 
         <Card>
           <CardHeader className="px-6">
-            {user?.role === "mentor" && (
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {user?.role === "mentor" ? (
+              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2">
                   <TabsTrigger value="view">View Notifications</TabsTrigger>
                   <TabsTrigger value="create">Create Notification</TabsTrigger>
                 </TabsList>
-              </Tabs>
-            )}
-            {user?.role !== "mentor" && (
-              <CardTitle>Your Notifications</CardTitle>
-            )}
-          </CardHeader>
-          <CardContent className="px-6">
-            {user?.role === "mentor" ? (
-              <>
                 <TabsContent value="view" className="pt-4">
                   <NotificationsList 
                     notifications={notifications?.data || []} 
@@ -67,8 +58,13 @@ const NotificationsPage = () => {
                     setActiveTab("view");
                   }} />
                 </TabsContent>
-              </>
+              </Tabs>
             ) : (
+              <CardTitle>Your Notifications</CardTitle>
+            )}
+          </CardHeader>
+          <CardContent className="px-6">
+            {user?.role !== "mentor" && (
               <NotificationsList 
                 notifications={notifications?.data || []} 
                 isLoading={isLoading} 
