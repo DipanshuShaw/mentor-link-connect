@@ -45,6 +45,12 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
       roles: ["mentor"]
     },
     { 
+      name: "Choose Mentor", 
+      path: "/choose-mentor", 
+      icon: <Users className="h-5 w-5" />,
+      roles: ["student"]
+    },
+    { 
       name: "My Mentor", 
       path: "/my-mentor", 
       icon: <Users className="h-5 w-5" />,
@@ -54,12 +60,6 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
       name: "Meetings", 
       path: "/meetings", 
       icon: <Calendar className="h-5 w-5" />,
-      roles: ["admin", "mentor", "student"]
-    },
-    { 
-      name: "Meeting Logs", 
-      path: "/logs", 
-      icon: <FileText className="h-5 w-5" />,
       roles: ["admin", "mentor", "student"]
     },
     { 

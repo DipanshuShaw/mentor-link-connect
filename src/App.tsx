@@ -17,6 +17,8 @@ import MeetingsPage from "./pages/Meetings/MeetingsPage";
 import MenteesPage from "./pages/Mentees/MenteesPage";
 import MeetingLogsPage from "./pages/Logs/MeetingLogsPage";
 import SessionNotesPage from "./pages/SessionNotes/SessionNotesPage";
+import ChooseMentorPage from "./pages/Mentor/ChooseMentorPage";
+import MyMentorPage from "./pages/Mentor/MyMentorPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +66,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["mentor"]}>
                   <MenteesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/choose-mentor" 
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <ChooseMentorPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-mentor" 
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <MyMentorPage />
                 </ProtectedRoute>
               } 
             />

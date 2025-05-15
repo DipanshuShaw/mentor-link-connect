@@ -145,32 +145,68 @@ export const meetings: Meeting[] = [
 export interface MeetingLog {
   id: string;
   meetingId: string;
+  mentorId: string;
+  studentId: string;
   mentorNotes?: string;
   studentFeedback?: string;
   createdAt: string;
+  meetingTitle?: string;
+  topic?: string;
+  notes?: string;
+  rating?: number;
+  completed?: boolean;
+  actionItems?: string;
+  feedback?: string;
 }
 
 export const meetingLogs: MeetingLog[] = [
   {
     id: "1",
     meetingId: "1",
+    mentorId: "2",
+    studentId: "3",
     mentorNotes: "John shows promise in backend development. Should focus more on database design.",
     studentFeedback: "The session was very helpful. I now have a clearer idea of what to focus on.",
-    createdAt: "2023-06-15T16:30:00Z"
+    createdAt: "2023-06-15T16:30:00Z",
+    meetingTitle: "Initial Assessment",
+    topic: "Backend Development",
+    notes: "Discussed database design principles and ORM frameworks",
+    rating: 5,
+    completed: true,
+    actionItems: "Complete SQL exercises, read about normalization",
+    feedback: "Great session, very informative"
   },
   {
     id: "2",
     meetingId: "2",
+    mentorId: "2",
+    studentId: "3",
     mentorNotes: "Good progress on database skills. Next steps: API design patterns.",
     studentFeedback: "I appreciate the detailed feedback and resources provided.",
-    createdAt: "2023-07-10T17:15:00Z"
+    createdAt: "2023-07-10T17:15:00Z",
+    meetingTitle: "Progress Review",
+    topic: "API Design",
+    notes: "Reviewed RESTful API concepts and best practices",
+    rating: 4,
+    completed: true,
+    actionItems: "Create sample API with Node.js, study authentication methods",
+    feedback: "Good explanations but need more practice examples"
   },
   {
     id: "3",
     meetingId: "4",
+    mentorId: "4",
+    studentId: "6",
     mentorNotes: "Emily has strong frontend skills. Suggested focusing on React and state management.",
     studentFeedback: "The career advice was invaluable. I'll work on the suggested portfolio improvements.",
-    createdAt: "2023-07-20T12:45:00Z"
+    createdAt: "2023-07-20T12:45:00Z",
+    meetingTitle: "Career Guidance",
+    topic: "Frontend Development",
+    notes: "Discussed React ecosystem and state management libraries",
+    rating: 5,
+    completed: true,
+    actionItems: "Update GitHub portfolio, start React project with Redux",
+    feedback: "Excellent guidance and practical advice"
   }
 ];
 

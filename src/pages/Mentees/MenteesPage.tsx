@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { Calendar, Clock, Users } from "lucide-react";
+import { Calendar, Clock, Users, FileText, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const MenteesPage = () => {
@@ -169,12 +169,6 @@ const MenteesPage = () => {
                   <Button variant="outline" className="w-full justify-start">
                     <FileText className="mr-2 h-4 w-4" />
                     Add Session Notes
-                  </Button>
-                </Link>
-                <Link to="/logs">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Clock className="mr-2 h-4 w-4" />
-                    View Meeting Logs
                   </Button>
                 </Link>
                 <Link to="/notifications">
