@@ -214,7 +214,7 @@ const SessionNotesPage = () => {
 
         <Card>
           <CardHeader>
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="view">View Notes</TabsTrigger>
                 <TabsTrigger value="create">Add Notes</TabsTrigger>
@@ -222,41 +222,89 @@ const SessionNotesPage = () => {
             </Tabs>
           </CardHeader>
           <CardContent>
-            <TabsContent value="view">
-              <SessionNotesList />
-            </TabsContent>
-            
-            <TabsContent value="create">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Tabs value={activeTab}>
+              <TabsContent value="view">
+                <SessionNotesList />
+              </TabsContent>
+              
+              <TabsContent value="create">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="studentId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mentee</FormLabel>
+                            <Select
+                              value={field.value}
+                              onValueChange={(value) => handleStudentChange(value)}
+                              disabled={isLoadingAssignments}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a mentee" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {assignments?.data?.map((assignment) => (
+                                  <SelectItem 
+                                    key={assignment.studentId} 
+                                    value={assignment.studentId}
+                                  >
+                                    {menteeDetails.get(assignment.studentId)?.name || "Loading..."}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="meetingId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Related Meeting</FormLabel>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={!selectedStudent || mentorMeetings.length === 0}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a meeting" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {mentorMeetings.map((meeting) => (
+                                  <SelectItem 
+                                    key={meeting.id} 
+                                    value={meeting.id}
+                                  >
+                                    {meeting.title} ({new Date(meeting.meetingTime).toLocaleDateString()})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     <FormField
                       control={form.control}
-                      name="studentId"
+                      name="topic"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mentee</FormLabel>
-                          <Select
-                            value={field.value}
-                            onValueChange={(value) => handleStudentChange(value)}
-                            disabled={isLoadingAssignments}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a mentee" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {assignments?.data?.map((assignment) => (
-                                <SelectItem 
-                                  key={assignment.studentId} 
-                                  value={assignment.studentId}
-                                >
-                                  {menteeDetails.get(assignment.studentId)?.name || "Loading..."}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Topic</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Topic covered in this session" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -264,120 +312,74 @@ const SessionNotesPage = () => {
 
                     <FormField
                       control={form.control}
-                      name="meetingId"
+                      name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Related Meeting</FormLabel>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            disabled={!selectedStudent || mentorMeetings.length === 0}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a meeting" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {mentorMeetings.map((meeting) => (
-                                <SelectItem 
-                                  key={meeting.id} 
-                                  value={meeting.id}
-                                >
-                                  {meeting.title} ({new Date(meeting.meetingTime).toLocaleDateString()})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Session Notes</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Detailed notes about the session..." 
+                              className="min-h-[120px]"
+                              {...field} 
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="topic"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Topic</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Topic covered in this session" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="actionItems"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Action Items</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Action items for the mentee..." 
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Session Notes</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Detailed notes about the session..." 
-                            className="min-h-[120px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="completed"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="cursor-pointer">
+                              Mark Session as Completed
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="actionItems"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Action Items</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Action items for the mentee..." 
-                            className="min-h-[80px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="completed"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="h-4 w-4"
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel className="cursor-pointer">
-                            Mark Session as Completed
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex justify-end">
-                    <Button 
-                      type="submit" 
-                      disabled={createNoteMutation.isPending}
-                    >
-                      {createNoteMutation.isPending ? "Saving..." : "Save Session Notes"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </TabsContent>
+                    <div className="flex justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={createNoteMutation.isPending}
+                      >
+                        {createNoteMutation.isPending ? "Saving..." : "Save Session Notes"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

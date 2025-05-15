@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { getMeetingLogs, getUserById } from "@/services/api";
 import { format } from "date-fns";
-import { User } from "@/contexts/AuthContext";
 import { MeetingLog } from "@/services/mockData";
 import { Badge } from "@/components/ui/badge";
 import {
