@@ -178,15 +178,18 @@ export const meetingLogs: MeetingLog[] = [
 export interface Notification {
   id: string;
   userId: string;
+  title: string; // Added title field here
   message: string;
   seen: boolean;
   createdAt: string;
+  type?: string;
 }
 
 export const notifications: Notification[] = [
   {
     id: "1",
     userId: "2", // Jane Smith (mentor)
+    title: "New Student Assignment",
     message: "You have been assigned a new student: John Doe",
     seen: true,
     createdAt: "2023-04-15T10:30:00Z"
@@ -194,6 +197,7 @@ export const notifications: Notification[] = [
   {
     id: "2",
     userId: "3", // John Doe (student)
+    title: "New Mentor Assignment",
     message: "You have been assigned to mentor: Jane Smith",
     seen: true,
     createdAt: "2023-04-15T10:30:00Z"
@@ -201,6 +205,7 @@ export const notifications: Notification[] = [
   {
     id: "3",
     userId: "2", // Jane Smith (mentor)
+    title: "Upcoming Meeting",
     message: "Meeting with John Doe is scheduled for tomorrow at 2 PM",
     seen: false,
     createdAt: "2023-06-14T09:00:00Z"
@@ -208,6 +213,7 @@ export const notifications: Notification[] = [
   {
     id: "4",
     userId: "3", // John Doe (student)
+    title: "Meeting Notes Added",
     message: "Your mentor has added notes from your last meeting",
     seen: false,
     createdAt: "2023-06-15T17:00:00Z"
@@ -215,6 +221,7 @@ export const notifications: Notification[] = [
   {
     id: "5",
     userId: "3", // John Doe (student)
+    title: "Upcoming Meeting Reminder",
     message: "Upcoming meeting: Progress Review on July 10th at 3:30 PM",
     seen: false,
     createdAt: "2023-07-08T11:15:00Z"
