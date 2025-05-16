@@ -24,32 +24,50 @@ interface AuthContextType {
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock API for this demo
-const mockUsers: User[] = [
-  {
-    id: "1",
-    name: "Admin User",
-    email: "admin@example.com",
-    role: "admin"
-  },
-  {
-    id: "2",
-    name: "Mentor User",
-    email: "mentor@example.com",
-    role: "mentor"
-  },
-  {
-    id: "3",
-    name: "Student User",
-    email: "student@example.com",
-    role: "student"
+// Initialize mock users from local storage or use default if not available
+const getInitialMockUsers = (): User[] => {
+  const storedMockUsers = localStorage.getItem("mockUsers");
+  if (storedMockUsers) {
+    try {
+      return JSON.parse(storedMockUsers);
+    } catch (error) {
+      console.error("Failed to parse stored mock users:", error);
+    }
   }
-];
+
+  // Default mock users if none in storage
+  return [
+    {
+      id: "1",
+      name: "Admin User",
+      email: "admin@example.com",
+      role: "admin"
+    },
+    {
+      id: "2",
+      name: "Mentor User",
+      email: "mentor@example.com",
+      role: "mentor"
+    },
+    {
+      id: "3",
+      name: "Student User",
+      email: "student@example.com",
+      role: "student"
+    }
+  ];
+};
 
 // Authentication provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [mockUsers, setMockUsers] = useState<User[]>(getInitialMockUsers());
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Save mockUsers to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
+  }, [mockUsers]);
 
   // Check if a user is already logged in
   useEffect(() => {
@@ -116,8 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role
       };
 
-      // In a real implementation, you'd store this in the database
-      mockUsers.push(newUser);
+      // Update mock users
+      const updatedMockUsers = [...mockUsers, newUser];
+      setMockUsers(updatedMockUsers);
 
       // Store user in local storage
       localStorage.setItem("user", JSON.stringify(newUser));
