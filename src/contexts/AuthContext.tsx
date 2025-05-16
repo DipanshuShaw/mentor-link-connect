@@ -58,9 +58,35 @@ const getInitialMockUsers = (): User[] => {
   ];
 };
 
+// Store mock passwords for this demo
+// In a real application, passwords would be hashed and stored securely
+interface MockUserCredential {
+  email: string;
+  password: string;
+}
+
+const getInitialUserCredentials = (): MockUserCredential[] => {
+  const storedCredentials = localStorage.getItem("userCredentials");
+  if (storedCredentials) {
+    try {
+      return JSON.parse(storedCredentials);
+    } catch (error) {
+      console.error("Failed to parse stored credentials:", error);
+    }
+  }
+
+  // Default credentials (all use "password" for demo)
+  return [
+    { email: "admin@example.com", password: "password" },
+    { email: "mentor@example.com", password: "password" },
+    { email: "student@example.com", password: "password" }
+  ];
+};
+
 // Authentication provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mockUsers, setMockUsers] = useState<User[]>(getInitialMockUsers());
+  const [userCredentials, setUserCredentials] = useState<MockUserCredential[]>(getInitialUserCredentials());
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +94,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
   }, [mockUsers]);
+
+  // Save credentials to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("userCredentials", JSON.stringify(userCredentials));
+  }, [userCredentials]);
 
   // Check if a user is already logged in
   useEffect(() => {
@@ -97,8 +128,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Invalid credentials");
       }
 
-      // In a real implementation, you'd verify the password here
-      if (password !== "password") { // Just for demo purposes
+      // Find user credentials
+      const userCredential = userCredentials.find(c => c.email === email);
+      
+      if (!userCredential || userCredential.password !== password) {
         throw new Error("Invalid credentials");
       }
 
@@ -137,6 +170,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Update mock users
       const updatedMockUsers = [...mockUsers, newUser];
       setMockUsers(updatedMockUsers);
+
+      // Store user credentials
+      const updatedCredentials = [...userCredentials, { email, password }];
+      setUserCredentials(updatedCredentials);
 
       // Store user in local storage
       localStorage.setItem("user", JSON.stringify(newUser));
