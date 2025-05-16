@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAssignmentsForMentor, getUserById } from "@/services/api";
 import { MentorAssignment } from "@/services/mockData";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,16 +11,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Calendar, Clock, Users, FileText, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const MenteesPage = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [menteeDetails, setMenteeDetails] = useState<Map<string, User>>(new Map());
+  const queryClient = useQueryClient();
 
-  const { data: assignments, isLoading } = useQuery({
+  // Force refetch when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      queryClient.invalidateQueries({ queryKey: ["mentorAssignments", user.id] });
+    }
+  }, [queryClient, user?.id]);
+
+  const { data: assignments, isLoading, refetch } = useQuery({
     queryKey: ["mentorAssignments", user?.id],
     queryFn: () => {
       if (!user) return Promise.resolve({ data: [], success: false });
@@ -39,6 +46,9 @@ const MenteesPage = () => {
       
       for (const assignment of assignments.data) {
         try {
+          // Skip removed assignments
+          if (assignment.mentorId === "removed") continue;
+          
           const response = await getUserById(assignment.studentId);
           if (response.success && response.data) {
             newMenteeDetails.set(assignment.studentId, response.data);
@@ -55,11 +65,10 @@ const MenteesPage = () => {
 
   const handleContactMentee = (menteeId: string) => {
     const menteeName = menteeDetails.get(menteeId)?.name || "Student";
-    toast({
-      title: "Contact Initiated",
-      description: `Reaching out to ${menteeName}.`,
-    });
+    toast.success(`Reaching out to ${menteeName}.`);
   };
+
+  const filteredAssignments = assignments?.data?.filter(a => a.mentorId !== "removed") || [];
 
   return (
     <AppLayout>
@@ -71,12 +80,18 @@ const MenteesPage = () => {
           </p>
         </div>
 
+        <div className="flex justify-end">
+          <Button onClick={() => refetch()} size="sm">
+            Refresh Mentee List
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Assigned Students</CardTitle>
               <Badge className="bg-blue-100 text-blue-800 border-0">
-                Total: {assignments?.data?.length || 0}
+                Total: {filteredAssignments.length}
               </Badge>
             </div>
           </CardHeader>
@@ -93,9 +108,9 @@ const MenteesPage = () => {
                   </div>
                 ))}
               </div>
-            ) : assignments?.data?.length ? (
+            ) : filteredAssignments.length > 0 ? (
               <div className="space-y-6">
-                {assignments.data.map((assignment: MentorAssignment) => {
+                {filteredAssignments.map((assignment: MentorAssignment) => {
                   const mentee = menteeDetails.get(assignment.studentId);
                   
                   return (

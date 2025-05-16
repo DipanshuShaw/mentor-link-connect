@@ -1,6 +1,5 @@
 
 import { 
-  users, 
   mentorAssignments, 
   meetings, 
   meetingLogs, 
@@ -25,6 +24,19 @@ interface ApiResponse<T> {
 // Users API
 export const getUsers = async (): Promise<ApiResponse<User[]>> => {
   await delay(500);
+  // Get users from localStorage instead of using the imported mock data
+  const storedUsers = localStorage.getItem("mockUsers");
+  let users: User[] = [];
+  
+  if (storedUsers) {
+    try {
+      users = JSON.parse(storedUsers);
+      console.log("Retrieved users from localStorage:", users);
+    } catch (error) {
+      console.error("Failed to parse stored users:", error);
+    }
+  }
+  
   return {
     data: users,
     success: true
@@ -33,6 +45,18 @@ export const getUsers = async (): Promise<ApiResponse<User[]>> => {
 
 export const getUserById = async (id: string): Promise<ApiResponse<User | null>> => {
   await delay(300);
+  // Get users from localStorage
+  const storedUsers = localStorage.getItem("mockUsers");
+  let users: User[] = [];
+  
+  if (storedUsers) {
+    try {
+      users = JSON.parse(storedUsers);
+    } catch (error) {
+      console.error("Failed to parse stored users:", error);
+    }
+  }
+  
   const user = users.find(u => u.id === id);
   return {
     data: user || null,
@@ -43,6 +67,19 @@ export const getUserById = async (id: string): Promise<ApiResponse<User | null>>
 
 export const getUsersByRole = async (role: UserRole): Promise<ApiResponse<User[]>> => {
   await delay(300);
+  // Get users from localStorage
+  const storedUsers = localStorage.getItem("mockUsers");
+  let users: User[] = [];
+  
+  if (storedUsers) {
+    try {
+      users = JSON.parse(storedUsers);
+      console.log(`Retrieved ${role} users from localStorage:`, users.filter(u => u.role === role));
+    } catch (error) {
+      console.error("Failed to parse stored users:", error);
+    }
+  }
+  
   const filteredUsers = users.filter(u => u.role === role);
   return {
     data: filteredUsers,
@@ -53,24 +90,60 @@ export const getUsersByRole = async (role: UserRole): Promise<ApiResponse<User[]
 // Mentor assignments API
 export const getMentorAssignments = async (): Promise<ApiResponse<MentorAssignment[]>> => {
   await delay(500);
-  return {
-    data: mentorAssignments,
-    success: true
-  };
-};
-
-export const getAssignmentsForMentor = async (mentorId: string): Promise<ApiResponse<MentorAssignment[]>> => {
-  await delay(300);
-  const assignments = mentorAssignments.filter(a => a.mentorId === mentorId);
+  // Get assignments from localStorage or use the default ones
+  const storedAssignments = localStorage.getItem("mentorAssignments");
+  let assignments: MentorAssignment[] = mentorAssignments;
+  
+  if (storedAssignments) {
+    try {
+      assignments = JSON.parse(storedAssignments);
+    } catch (error) {
+      console.error("Failed to parse stored assignments:", error);
+    }
+  }
+  
   return {
     data: assignments,
     success: true
   };
 };
 
+export const getAssignmentsForMentor = async (mentorId: string): Promise<ApiResponse<MentorAssignment[]>> => {
+  await delay(300);
+  // Get assignments from localStorage or use the default ones
+  const storedAssignments = localStorage.getItem("mentorAssignments");
+  let assignments: MentorAssignment[] = mentorAssignments;
+  
+  if (storedAssignments) {
+    try {
+      assignments = JSON.parse(storedAssignments);
+    } catch (error) {
+      console.error("Failed to parse stored assignments:", error);
+    }
+  }
+  
+  const filteredAssignments = assignments.filter(a => a.mentorId === mentorId);
+  return {
+    data: filteredAssignments,
+    success: true
+  };
+};
+
 export const getAssignmentForStudent = async (studentId: string): Promise<ApiResponse<MentorAssignment | null>> => {
   await delay(300);
-  const assignment = mentorAssignments.find(a => a.studentId === studentId);
+  // Get assignments from localStorage or use the default ones
+  const storedAssignments = localStorage.getItem("mentorAssignments");
+  let assignments: MentorAssignment[] = mentorAssignments;
+  
+  if (storedAssignments) {
+    try {
+      assignments = JSON.parse(storedAssignments);
+    } catch (error) {
+      console.error("Failed to parse stored assignments:", error);
+    }
+  }
+  
+  const assignment = assignments.find(a => a.studentId === studentId);
   return {
     data: assignment || null,
     success: !!assignment,
@@ -80,12 +153,35 @@ export const getAssignmentForStudent = async (studentId: string): Promise<ApiRes
 
 export const createMentorAssignment = async (assignment: Omit<MentorAssignment, "id" | "assignedDate">): Promise<ApiResponse<MentorAssignment>> => {
   await delay(700);
+  
+  // Get existing assignments from localStorage or use the default ones
+  const storedAssignments = localStorage.getItem("mentorAssignments");
+  let existingAssignments: MentorAssignment[] = mentorAssignments;
+  
+  if (storedAssignments) {
+    try {
+      existingAssignments = JSON.parse(storedAssignments);
+    } catch (error) {
+      console.error("Failed to parse stored assignments:", error);
+    }
+  }
+  
+  // Remove any existing assignment for this student (allows changing mentors)
+  const filteredAssignments = existingAssignments.filter(a => a.studentId !== assignment.studentId);
+  
+  // Create new assignment
   const newAssignment: MentorAssignment = {
-    id: String(mentorAssignments.length + 1),
+    id: String(Date.now()), // Use timestamp as unique ID
     ...assignment,
     assignedDate: new Date().toISOString().split('T')[0]
   };
-  mentorAssignments.push(newAssignment);
+  
+  // Add new assignment to list
+  const updatedAssignments = [...filteredAssignments, newAssignment];
+  
+  // Save to localStorage
+  localStorage.setItem("mentorAssignments", JSON.stringify(updatedAssignments));
+  
   return {
     data: newAssignment,
     success: true,

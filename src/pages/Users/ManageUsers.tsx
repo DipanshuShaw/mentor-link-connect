@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/contexts/AuthContext";
 import { getUsers } from "@/services/api";
@@ -35,10 +35,16 @@ const ManageUsers = () => {
   
   const queryClient = useQueryClient();
   
-  const { data: usersResponse, isLoading, error } = useQuery({
+  // Force refetch on mount to ensure we get the latest data
+  const { data: usersResponse, isLoading, error, refetch } = useQuery({
     queryKey: ["users"],
     queryFn: getUsers
   });
+
+  // Refetch users when the component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const users = usersResponse?.data || [];
   
@@ -53,21 +59,54 @@ const ManageUsers = () => {
   // Mock mutation for adding a user
   const addUserMutation = useMutation({
     mutationFn: (newUser: Omit<User, "id">) => {
-      // In a real app, this would be an API call to your backend
+      // Get current users from localStorage
+      const storedUsers = localStorage.getItem("mockUsers");
+      let currentUsers: User[] = [];
+      
+      if (storedUsers) {
+        try {
+          currentUsers = JSON.parse(storedUsers);
+        } catch (error) {
+          console.error("Failed to parse stored users:", error);
+        }
+      }
+      
+      // Create new user with unique ID
       const mockNewUser = {
         ...newUser,
-        id: (users.length + 1).toString()
+        id: String(Date.now()) // Use timestamp for unique ID
       };
       
-      // Here we're just returning the mockNewUser as if it was from an API
+      // Update localStorage
+      const updatedUsers = [...currentUsers, mockNewUser];
+      localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
+      
+      // Also update user credentials if password is provided
+      if ((newUser as any).password) {
+        const storedCredentials = localStorage.getItem("userCredentials");
+        let credentials: { email: string; password: string }[] = [];
+        
+        if (storedCredentials) {
+          try {
+            credentials = JSON.parse(storedCredentials);
+          } catch (error) {
+            console.error("Failed to parse stored credentials:", error);
+          }
+        }
+        
+        const updatedCredentials = [...credentials, { 
+          email: newUser.email, 
+          password: (newUser as any).password 
+        }];
+        
+        localStorage.setItem("userCredentials", JSON.stringify(updatedCredentials));
+      }
+      
       return Promise.resolve({ data: mockNewUser, success: true });
     },
     onSuccess: (response) => {
       // Update the cache with new user
-      queryClient.setQueryData(["users"], (oldData: any) => ({
-        ...oldData,
-        data: [...(oldData?.data || []), response.data]
-      }));
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success(`User ${response.data.name} added successfully`);
     }
   });
@@ -75,21 +114,33 @@ const ManageUsers = () => {
   // Mock mutation for deleting a user
   const deleteUserMutation = useMutation({
     mutationFn: (userId: string) => {
-      // In a real app, this would be an API call to your backend
+      // Get current users from localStorage
+      const storedUsers = localStorage.getItem("mockUsers");
+      let currentUsers: User[] = [];
+      
+      if (storedUsers) {
+        try {
+          currentUsers = JSON.parse(storedUsers);
+        } catch (error) {
+          console.error("Failed to parse stored users:", error);
+        }
+      }
+      
+      // Filter out the deleted user
+      const updatedUsers = currentUsers.filter(user => user.id !== userId);
+      localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
+      
       return Promise.resolve({ success: true });
     },
     onSuccess: (_, userId) => {
       // Update the cache by removing deleted user
-      queryClient.setQueryData(["users"], (oldData: any) => ({
-        ...oldData,
-        data: (oldData?.data || []).filter((user: User) => user.id !== userId)
-      }));
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       const deletedUser = users.find(u => u.id === userId);
       toast.success(`User ${deletedUser?.name || ''} deleted successfully`);
     }
   });
 
-  const handleAddUser = (newUser: Omit<User, "id">) => {
+  const handleAddUser = (newUser: Omit<User, "id"> & { password: string }) => {
     addUserMutation.mutate(newUser);
   };
 

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUsersByRole, createMentorAssignment, getAssignmentForStudent } from "@/services/api";
 import { User } from "@/contexts/AuthContext";
 import { MentorAssignment } from "@/services/mockData";
@@ -11,15 +11,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { UserPlus, Users, Calendar } from "lucide-react";
+import { UserPlus, Users, Calendar, X } from "lucide-react";
 import { format } from "date-fns";
 
 const ChooseMentorPage = () => {
   const { user } = useAuth();
   const [selectedMentor, setSelectedMentor] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   // Get all mentors
   const { data: mentorsResponse, isLoading: mentorsLoading } = useQuery({
@@ -38,7 +39,12 @@ const ChooseMentorPage = () => {
   });
 
   const handleSelectMentor = (mentor: User) => {
-    setSelectedMentor(mentor);
+    // Toggle selection - if already selected, deselect it
+    if (selectedMentor?.id === mentor.id) {
+      setSelectedMentor(null);
+    } else {
+      setSelectedMentor(mentor);
+    }
   };
 
   const handleConfirmSelection = async () => {
@@ -53,33 +59,53 @@ const ChooseMentorPage = () => {
       });
       
       if (response.success) {
-        toast({
-          title: "Mentor Assigned",
-          description: `You have successfully selected ${selectedMentor.name} as your mentor.`,
-        });
+        toast.success(`You have successfully selected ${selectedMentor.name} as your mentor.`);
         
-        // Reset selection and refetch assignment
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ["currentMentorAssignment"] });
+        
+        // Reset selection
         setSelectedMentor(null);
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: response.message || "Failed to assign mentor. Please try again.",
-        });
+        toast.error(response.message || "Failed to assign mentor. Please try again.");
       }
     } catch (error) {
       console.error("Error assigning mentor:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-      });
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const hasExistingMentor = assignmentResponse?.data !== null;
+  const handleRemoveMentor = async () => {
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // For removing mentor, we create an empty assignment which the API will interpret as removing
+      const response = await createMentorAssignment({
+        mentorId: "removed", // Special value to indicate removal
+        studentId: user.id,
+      });
+      
+      if (response.success) {
+        toast.success("Your mentor has been removed successfully.");
+        
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ["currentMentorAssignment"] });
+      } else {
+        toast.error(response.message || "Failed to remove mentor. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error removing mentor:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const hasExistingMentor = assignmentResponse?.data !== null && assignmentResponse?.data?.mentorId !== "removed";
   const currentMentor = mentorsResponse?.data?.find(
     (mentor: User) => mentor.id === assignmentResponse?.data?.mentorId
   );
@@ -117,7 +143,7 @@ const ChooseMentorPage = () => {
             <CardHeader>
               <CardTitle>Your Current Mentor</CardTitle>
               <CardDescription>
-                You already have a mentor assigned. You can view their details below.
+                You already have a mentor assigned. You can view their details below or change mentors.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -136,9 +162,9 @@ const ChooseMentorPage = () => {
                   </div>
                 </div>
                 <div className="mt-4 md:mt-0 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
-                  <Button size="sm" variant="outline">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Schedule Meeting
+                  <Button size="sm" variant="outline" onClick={handleRemoveMentor} disabled={isSubmitting}>
+                    <X className="mr-2 h-4 w-4" />
+                    Remove Mentor
                   </Button>
                   <Button size="sm">
                     Contact Mentor
@@ -154,7 +180,7 @@ const ChooseMentorPage = () => {
                 <UserPlus className="h-4 w-4" />
                 <AlertTitle>Mentor Selected</AlertTitle>
                 <AlertDescription>
-                  You've selected {selectedMentor.name} as your mentor. Confirm this selection to proceed.
+                  You've selected {selectedMentor.name} as your mentor. Confirm this selection to proceed or click on the mentor again to deselect.
                 </AlertDescription>
               </Alert>
             ) : null}
